@@ -3,8 +3,10 @@ package api
 import (
 	"database/sql"
 
-	"github.com/gin-gonic/gin"
+	"gradehub/config"
 	"gradehub/services/user"
+
+	"github.com/gin-gonic/gin"
 )
 
 type API struct {
@@ -21,6 +23,12 @@ func NewAPI(addr string, db *sql.DB) *API {
 
 func (a *API) Run() error {
 	router := gin.Default()
+	router.SetTrustedProxies(nil)
+	
+	if (config.Env.ReleaseMode) {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	
 	subrouter := router.Group("/api/v1")
 
 	userHandler := user.NewHandler()

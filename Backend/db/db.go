@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"gradehub/config"
+	"gradehub/utils"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -11,11 +11,11 @@ import (
 
 func Connect() *sql.DB {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.Env.DBHost,
-		config.Env.DBPort,
-		config.Env.DBUser,
-		config.Env.DBPassword,
-		config.Env.DBName,
+		utils.GetEnv("DB_HOST", "localhost"),
+		utils.GetEnv("DB_PORT", "5432"),
+		utils.GetEnv("DB_USER", "postgres"),
+		utils.GetEnv("DB_PASSWORD", "postgres"),
+		utils.GetEnv("DB_NAME", "gradehub"),
 	)
 
 	DB, err := sql.Open("postgres", dsn)

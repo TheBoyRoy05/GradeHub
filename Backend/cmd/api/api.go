@@ -2,9 +2,8 @@ package api
 
 import (
 	"database/sql"
-
-	"gradehub/config"
 	"gradehub/services/user"
+	"gradehub/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,18 +20,18 @@ func NewAPI(addr string, db *sql.DB) *API {
 	}
 }
 
-func (a *API) Run() error {
-	router := gin.Default()
-	router.SetTrustedProxies(nil)
-	
-	if (config.Env.ReleaseMode) {
+func (api *API) Run() error {
+	if (utils.GetEnv("GIN_MODE", "debug") == "release") {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	
+
+	router := gin.Default()
+	router.SetTrustedProxies(nil)
 	subrouter := router.Group("/api/v1")
 
-	userHandler := user.NewHandler()
+	userStore := user.NewStore(api.DB)
+	userHandler := user.NewHandler(userStore)
 	userHandler.RegisterRoutes(subrouter)
 
-	return router.Run(a.addr)
+	return router.Run(api.addr)
 }

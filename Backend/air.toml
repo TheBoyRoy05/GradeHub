@@ -1,0 +1,17 @@
+# Air configuration file
+
+# Directory to watch for file changes
+root = "."          # Root directory of your project
+tmp_dir = "./tmp"     # Temporary directory for building
+
+# Command to run the Go build and the binary
+[build]
+cmd = "go build -o ./tmp/gradehub ./cmd/main.go"
+bin = "./tmp/gradehub"
+full_bin = "./tmp/gradehub"
+include_ext = ["go"]
+
+# Watch file changes
+[watcher]
+watch = ["."]
+exclude = ["tmp", "vendor", ".git"]

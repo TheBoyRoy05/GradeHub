@@ -4,7 +4,6 @@ import (
 	"gradehub/models"
 	"gradehub/services/auth"
 	"gradehub/utils"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -82,12 +81,9 @@ func (h *Handler) handleLogin(c *gin.Context) {
 
 	user, err := h.store.LoginUser(&login)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-
-	// print user
-	log.Printf("user: %v\n", user)
 
 	c.JSON(http.StatusOK, user)
 }

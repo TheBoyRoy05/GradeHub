@@ -20,10 +20,10 @@ func (s *Store) parseRows(rows *sql.Rows) (*models.User, error) {
 	for rows.Next() {
 		err := rows.Scan(
 			&user.ID,
-			&user.Firstname,
-			&user.Lastname,
 			&user.Username,
 			&user.Password,
+			&user.Firstname,
+			&user.Lastname,
 			&user.Email,
 			&user.CreatedAt,
 			&user.UpdatedAt,

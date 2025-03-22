@@ -3,9 +3,12 @@ package user
 import (
 	"gradehub/models"
 	"gradehub/services/auth"
+	"gradehub/utils"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type Handler struct {
@@ -19,6 +22,7 @@ func NewHandler(store models.UserStore) *Handler {
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	router.POST("/register", h.handleRegister)
 	router.POST("/login", h.handleLogin)
+	router.POST("/logout", h.handleLogout)
 }
 
 func (h *Handler) handleRegister(c *gin.Context) {
@@ -29,8 +33,9 @@ func (h *Handler) handleRegister(c *gin.Context) {
 		return
 	}
 
-	if register.Firstname == "" || register.Lastname == "" || register.Username == "" || register.Password == "" || register.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "All fields are required"})
+	if err := utils.Validator.Struct(register); err != nil {
+		error := err.(validator.ValidationErrors)
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error()})
 		return
 	}
 
@@ -69,23 +74,24 @@ func (h *Handler) handleLogin(c *gin.Context) {
 		return
 	}
 
-	if login.Username == "" || login.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username and password are required"})
+	if err := utils.Validator.Struct(login); err != nil {
+		error := err.(validator.ValidationErrors)
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error()})
 		return
 	}
 
-	var err error
-	login.Password, err = auth.HashPassword(login.Password)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-	
 	user, err := h.store.LoginUser(&login)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
+	// print user
+	log.Printf("user: %v\n", user)
+
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) handleLogout(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }

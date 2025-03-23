@@ -1,17 +1,15 @@
-# Air configuration file
-
 # Directory to watch for file changes
-root = "."          # Root directory of your project
-tmp_dir = "./tmp"     # Temporary directory for building
+root = "."                            # Keep root as current directory
+tmp_dir = "./backend/tmp"
 
-# Command to run the Go build and the binary
+# Build Go binary from the backend directory
 [build]
-cmd = "go build -o ./tmp/gradehub ./cmd/main.go"
-bin = "./tmp/gradehub"
-full_bin = "./tmp/gradehub"
+cmd = "cd backend && go build -o ./tmp/gradehub.exe ./cmd/main.go"   # Change dir before building
+bin = "./backend/tmp/gradehub.exe"
+full_bin = "./backend/tmp/gradehub.exe"
 include_ext = ["go"]
 
-# Watch file changes
+# Watcher settings
 [watcher]
-watch = ["."]
+watch = ["./backend"]                 # Watch the backend directory
 exclude = ["tmp", "vendor", ".git"]

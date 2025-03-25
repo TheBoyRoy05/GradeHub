@@ -1,15 +1,7 @@
-# Directory to watch for file changes
-root = "."                            # Keep root as current directory
-tmp_dir = "./backend/tmp"
-
-# Build Go binary from the backend directory
 [build]
-cmd = "cd backend && go build -o ./tmp/gradehub.exe ./cmd/main.go"   # Change dir before building
-bin = "./backend/tmp/gradehub.exe"
-full_bin = "./backend/tmp/gradehub.exe"
+cmd = "go build -o gradehub ./cmd/main.go"
+bin = "gradehub"
+dir = "."
 include_ext = ["go"]
-
-# Watcher settings
-[watcher]
-watch = ["./backend"]                 # Watch the backend directory
-exclude = ["tmp", "vendor", ".git"]
+exclude_dir = ["vendor"]
+run_after_build = "chmod +x gradehub"

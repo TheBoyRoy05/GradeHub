@@ -38,7 +38,7 @@ func (h *Handler) handleRegister(c *gin.Context) {
 		return
 	}
 
-	if _, err := h.store.GetUser(register.Username); err == nil {
+	if _, err := h.store.GetUserByEmail(register.Email); err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
 		return
 	}
@@ -50,11 +50,10 @@ func (h *Handler) handleRegister(c *gin.Context) {
 	}
 
 	err = h.store.CreateUser(&models.User{
+		Email:     register.Email,
+		Password:  hashedPassword,
 		Firstname: register.Firstname,
 		Lastname:  register.Lastname,
-		Username:  register.Username,
-		Password:  hashedPassword,
-		Email:     register.Email,
 	})
 
 	if err != nil {

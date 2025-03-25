@@ -20,11 +20,10 @@ func (s *Store) parseRows(rows *sql.Rows) (*models.User, error) {
 	for rows.Next() {
 		err := rows.Scan(
 			&user.ID,
-			&user.Username,
+			&user.Email,
 			&user.Password,
 			&user.Firstname,
 			&user.Lastname,
-			&user.Email,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		)
@@ -41,8 +40,8 @@ func (s *Store) parseRows(rows *sql.Rows) (*models.User, error) {
 	return &user, nil
 }
 
-func (s *Store) GetUser(username string) (*models.User, error) {
-	rows, err := s.db.Query("SELECT * FROM users WHERE username = $1", username)
+func (s *Store) GetUserByEmail(email string) (*models.User, error) {
+	rows, err := s.db.Query("SELECT * FROM users WHERE email = $1", email)
 	if err != nil {
 		return nil, err
 	}
@@ -60,18 +59,17 @@ func (s *Store) GetUserByID(id int) (*models.User, error) {
 }
 
 func (s *Store) CreateUser(user *models.User) error {
-	_, err := s.db.Exec("INSERT INTO users (firstname, lastname, username, password, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())",
+	_, err := s.db.Exec("INSERT INTO users (email, password, firstname, lastname, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())",
+		user.Email,
+		user.Password,
 		user.Firstname,
 		user.Lastname,
-		user.Username,
-		user.Password,
-		user.Email,
 	)
 	return err
 }
 
 func (s *Store) LoginUser(login *models.Login) (*models.User, error) {
-	user, err := s.GetUser(login.Username)
+	user, err := s.GetUserByEmail(login.Email)
 	if err != nil {
 		return nil, err
 	}

@@ -1,13 +1,13 @@
 package user
 
 import (
-	"gradehub/models"
-	"gradehub/services/auth"
-	"gradehub/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/theboyroy05/gradehub/models"
+	"github.com/theboyroy05/gradehub/services/auth"
+	"github.com/theboyroy05/gradehub/utils"
 )
 
 type Handler struct {

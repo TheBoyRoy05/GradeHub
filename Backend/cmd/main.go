@@ -1,11 +1,11 @@
 package main
 
 import (
-	"gradehub/cmd/api"
-	"gradehub/db"
 	"log"
 
 	"github.com/joho/godotenv"
+	"github.com/theboyroy05/gradehub/cmd/api"
+	"github.com/theboyroy05/gradehub/db"
 )
 
 func main() {

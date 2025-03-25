@@ -1,0 +1,6 @@
+[build]
+cmd = "go build -o ./tmp/gradehub.exe ./cmd/main.go"
+bin = "./tmp/gradehub.exe"
+full_bin = "./tmp/gradehub.exe"
+include_ext = ["go"]
+exclude_dir = ["vendor"]

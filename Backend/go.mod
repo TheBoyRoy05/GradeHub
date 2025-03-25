@@ -1,4 +1,4 @@
-module gradehub
+module github.com/theboyroy05/gradehub
 
 go 1.24.1
 

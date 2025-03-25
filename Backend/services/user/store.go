@@ -3,8 +3,9 @@ package user
 import (
 	"database/sql"
 	"fmt"
-	"gradehub/models"
-	"gradehub/services/auth"
+
+	"github.com/theboyroy05/gradehub/models"
+	"github.com/theboyroy05/gradehub/services/auth"
 )
 
 type Store struct {

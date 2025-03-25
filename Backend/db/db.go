@@ -3,10 +3,10 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"gradehub/utils"
 	"log"
 
 	_ "github.com/lib/pq"
+	"github.com/theboyroy05/gradehub/utils"
 )
 
 func Connect() *sql.DB {

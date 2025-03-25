@@ -21,7 +21,7 @@ services:
   backend:
     build:
       context: ./backend              # Use the backend directory
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -30,17 +30,11 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: gradehub
-    volumes:
-      - ./backend:/app               # Mount only the backend
-      - /app/tmp                     # Exclude tmp from volume
     depends_on:
       db:
         condition: service_healthy
     networks:
       - gradehub_network
-    command: air -c /app/air.toml    # Use Air for hot reloading
-    tty: true
-    stdin_open: true
 
   migrate:
     image: migrate/migrate

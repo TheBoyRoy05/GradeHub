@@ -2,10 +2,10 @@ package api
 
 import (
 	"database/sql"
-	"gradehub/services/user"
-	"gradehub/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/theboyroy05/gradehub/services/user"
+	"github.com/theboyroy05/gradehub/utils"
 )
 
 type API struct {

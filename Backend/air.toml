@@ -1,7 +1,0 @@
-[build]
-cmd = "go build -o gradehub ./cmd/main.go"
-bin = "gradehub"
-dir = "."
-include_ext = ["go"]
-exclude_dir = ["vendor"]
-run_after_build = "chmod +x gradehub"

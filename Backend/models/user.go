@@ -3,7 +3,6 @@ package models
 type UserStore interface {
 	GetUserByEmail(username string) (*User, error)
 	LoginUser(login *Login) (*User, error)
-	GetUserByID(id int) (*User, error)
 	CreateUser(user *User) error
 }
 

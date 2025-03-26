@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS "courses" (
 
 CREATE TABLE IF NOT EXISTS "schools" (
     "id" SERIAL PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL
+    "name" VARCHAR(255) NOT NULL,
+    "alias" TEXT
 );
 
 CREATE TABLE IF NOT EXISTS "users" (

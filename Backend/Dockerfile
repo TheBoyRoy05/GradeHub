@@ -1,5 +1,5 @@
 # Use official Golang image to build the app
-FROM golang:1.24 AS builder
+FROM golang:1.24-alpine AS builder
 
 # Set environment variables
 ENV GO111MODULE=on \

@@ -10,6 +10,7 @@ services:
       POSTGRES_DB: gradehub
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./backend/db/data:/docker-entrypoint-initdb.d/data
     networks:
       - gradehub_network
     healthcheck:
@@ -39,7 +40,7 @@ services:
   migrate:
     image: migrate/migrate
     volumes:
-      - ./backend/migrations:/migrations
+      - ./backend/db/migrations:/migrations
     command: [
       "-path", "/migrations",
       "-database", "postgres://postgres:postgres@db:5432/gradehub?sslmode=disable",

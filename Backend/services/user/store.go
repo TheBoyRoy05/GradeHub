@@ -50,15 +50,6 @@ func (s *Store) GetUserByEmail(email string) (*models.User, error) {
 	return s.parseRows(rows)
 }
 
-func (s *Store) GetUserByID(id int) (*models.User, error) {
-	rows, err := s.db.Query("SELECT * FROM users WHERE id = $1", id)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.parseRows(rows)
-}
-
 func (s *Store) CreateUser(user *models.User) error {
 	_, err := s.db.Exec("INSERT INTO users (email, password, firstname, lastname, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())",
 		user.Email,

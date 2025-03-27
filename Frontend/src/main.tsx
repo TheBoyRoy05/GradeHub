@@ -7,8 +7,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import LandingPage from "./Pages/Landing/LandingPage";
-import SignUpPage from "./Pages/SignUp/SignUpPage";
-import SignInPage from "./Pages/SignIn/SignInPage";
+import AuthPage from "./Pages/Auth/AuthPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
@@ -23,8 +22,8 @@ createRoot(document.getElementById("root")!).render(
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/signin" element={<SignInPage />} />
+            <Route path="/signup" element={<AuthPage />} />
+            <Route path="/signin" element={<AuthPage signIn />} />
           </Routes>
         </BrowserRouter>
       </GoogleOAuthProvider>

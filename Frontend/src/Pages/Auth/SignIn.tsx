@@ -32,8 +32,10 @@ const SignInSchema = z.object({
 });
 
 interface SignInProps {
-  formData: { email: string; password: string };
-  setFormData: React.Dispatch<React.SetStateAction<{ email: string; password: string }>>;
+  formData: { firstname: string; lastname: string; email: string; password: string };
+  setFormData: React.Dispatch<
+    React.SetStateAction<{ firstname: string; lastname: string; email: string; password: string }>
+  >;
 }
 
 const SignIn = ({ formData, setFormData }: SignInProps) => {
@@ -111,7 +113,7 @@ const SignIn = ({ formData, setFormData }: SignInProps) => {
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4 w-full">
-        <FormField
+          <FormField
             control={form.control}
             name="email"
             render={({ field }) => (

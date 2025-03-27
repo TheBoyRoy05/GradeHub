@@ -22,6 +22,7 @@ import { z } from "zod";
 import usePOST from "@/Hooks/usePOST";
 import { LoaderCircle } from "lucide-react";
 import { handleAction } from "@/Utils/functions";
+import { Skeleton } from "@/Components/UI/skeleton";
 
 const VerificationSchema = z.object({
   code: z
@@ -48,12 +49,10 @@ const Verification = ({ formData }: VerificationProps) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTime((time) => (time > 0 ? time - 1 : 0));
+      setTime((time) => isLoaded ? (time > 0 ? time - 1 : 0) : time);
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
-
-  if (!isLoaded) return null;
+  }, [isLoaded]);
 
   async function handleVerification(data: z.infer<typeof VerificationSchema>) {
     await handleAction(isLoaded, setLoading, async () => {
@@ -69,17 +68,21 @@ const Verification = ({ formData }: VerificationProps) => {
       await post({ url: "/register", body: formData, handleData: () => {} });
       toast.success("Verification successful");
       navigate("/dashboard");
-    })
+    });
   }
 
   async function handleResend() {
-    await handleAction(isLoaded, () => setLoading(false), async () => {
-      if (!signUp || time > 0) return;
-      setTime(30);
+    await handleAction(
+      isLoaded,
+      () => setLoading(false),
+      async () => {
+        if (!signUp || time > 0) return;
+        setTime(30);
 
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      toast.success("Verification code sent to your email");
-    })
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        toast.success("Verification code sent to your email");
+      }
+    );
   }
 
   return (
@@ -96,24 +99,17 @@ const Verification = ({ formData }: VerificationProps) => {
               <FormLabel className="text-lg">Verification Code</FormLabel>
               <FormControl>
                 <InputOTP maxLength={6} {...field} pattern={REGEXP_ONLY_DIGITS}>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} className="w-12 h-12 text-lg font-bold" />
-                  </InputOTPGroup>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={1} className="w-12 h-12 text-lg font-bold" />
-                  </InputOTPGroup>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={2} className="w-12 h-12 text-lg font-bold" />
-                  </InputOTPGroup>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={3} className="w-12 h-12 text-lg font-bold" />
-                  </InputOTPGroup>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={4} className="w-12 h-12 text-lg font-bold" />
-                  </InputOTPGroup>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={5} className="w-12 h-12 text-lg font-bold" />
-                  </InputOTPGroup>
+                  {Array(6)
+                    .fill(null)
+                    .map((_, index) =>
+                      isLoaded ? (
+                        <InputOTPGroup key={index}>
+                          <InputOTPSlot index={index} className="w-12 h-12 text-lg font-bold" />
+                        </InputOTPGroup>
+                      ) : (
+                        <Skeleton key={index} className="w-12 h-12 text-lg font-bold" />
+                      )
+                    )}
                 </InputOTP>
               </FormControl>
 

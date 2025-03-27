@@ -18,6 +18,10 @@ import { Button } from "@/Components/UI/button";
 import { Input } from "@/Components/UI/input";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 
+import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import usePOST from "@/Hooks/usePOST";
+
 const SignUpSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
@@ -35,9 +39,13 @@ interface SignUpProps {
 
 const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) => {
   type SignUpError = { errors: { longMessage: string }[] };
+  type GoogleUser = { given_name: string; family_name: string; email: string };
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const { isLoaded, signUp } = useSignUp();
+  const { post } = usePOST();
 
   const form = useForm<z.infer<typeof SignUpSchema>>({
     resolver: zodResolver(SignUpSchema),
@@ -90,100 +98,143 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
     }
   }
 
+  async function handleGoogleSignUp(tokenResponse: CredentialResponse) {
+    if (!isLoaded) return;
+    setLoading(true);
+    const user: GoogleUser = jwtDecode(tokenResponse.credential!);
+
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/dashboard",
+        redirectUrlComplete: "/dashboard",
+      });
+
+      const body = {
+        firstname: user.given_name,
+        lastname: user.family_name,
+        email: user.email,
+        password: "",
+      };
+
+      await post({ url: "/register", body, handleData: () => {} });
+    } catch (err: unknown) {
+      console.log(JSON.stringify(err));
+      toast.error((err as SignUpError).errors[0].longMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
-        <div className="flex gap-4">
+    <div className="flex flex-col items-center gap-4">
+      <GoogleLogin
+        onSuccess={handleGoogleSignUp}
+        onError={() => toast.error("Google login failed")}
+        size="large"
+        text="signup_with"
+        shape="pill"
+        width="300"
+      />
+      <div className="flex items-center w-full gap-4">
+        <div className="flex-1 border border-gray-300" />
+        <span className="text-sm text-gray-500">or continue with</span>
+        <div className="flex-1 border border-gray-300" />
+      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
+          <div className="flex gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="First Name"
+                      {...field}
+                      onChange={(e) => {
+                        setFormData({ ...formData, firstname: e.target.value });
+                        field.onChange(e);
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Last Name"
+                      {...field}
+                      onChange={(e) => {
+                        setFormData({ ...formData, lastname: e.target.value });
+                        field.onChange(e);
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
-            name="firstName"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="First Name"
+                    placeholder="Email"
                     {...field}
                     onChange={(e) => {
-                      setFormData({ ...formData, firstname: e.target.value });
+                      setFormData({ ...formData, email: e.target.value });
                       field.onChange(e);
                     }}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
-            name="lastName"
+            name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Last Name"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
                     {...field}
                     onChange={(e) => {
-                      setFormData({ ...formData, lastname: e.target.value });
+                      setFormData({ ...formData, password: e.target.value });
                       field.onChange(e);
                     }}
+                    endIcon={passwordEye()}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
-        </div>
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Email"
-                  {...field}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    field.onChange(e);
-                  }}
-                  />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  {...field}
-                  onChange={(e) => {
-                    setFormData({ ...formData, password: e.target.value });
-                    field.onChange(e);
-                  }}
-                  endIcon={passwordEye()}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="hover:cursor-pointer">
-          {loading ? <LoaderCircle className="animate-spin" /> : "Sign Up"}
-        </Button>
-      </form>
-    </Form>
+          <Button type="submit" className="hover:cursor-pointer">
+            {loading ? <LoaderCircle className="animate-spin" /> : "Sign Up"}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 };
 

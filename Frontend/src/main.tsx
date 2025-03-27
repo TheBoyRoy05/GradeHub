@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Toaster } from "./Components/UI/sonner";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import LandingPage from "./Pages/Landing/LandingPage";
 import SignUpPage from "./Pages/SignUp/SignUpPage";
@@ -15,14 +16,16 @@ if (!PUBLISHABLE_KEY) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <Toaster />
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <BrowserRouter>
-        <Toaster />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-        </Routes>
-      </BrowserRouter>
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+          </Routes>
+        </BrowserRouter>
+      </GoogleOAuthProvider>
     </ClerkProvider>
   </StrictMode>
 );

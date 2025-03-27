@@ -1,5 +1,12 @@
 import SignUp from "@/Pages/SignUp/SignUp";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../Components/UI/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../Components/UI/card";
 import { useState } from "react";
 import Verification from "./Verification";
 
@@ -13,21 +20,28 @@ const SignUpPage = () => {
   });
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen gap-4">
-      <Card className="w-full max-w-sm">
+    <div className="flex items-center justify-center h-screen">
+      <Card className="w-full max-w-sm flex flex-col gap-8">
         <CardHeader>
           <CardTitle className="text-center text-2xl">
             {pendingVerification ? "Verify Email Address" : "Create GradeHub Account"}
           </CardTitle>
+          <CardDescription className="text-center">
+            Welcome! Please fill in the details to get started.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {pendingVerification ? (
             <Verification formData={formData} />
           ) : (
-            <SignUp setPendingVerification={setPendingVerification} formData={formData} setFormData={setFormData} />
+            <SignUp
+              setPendingVerification={setPendingVerification}
+              formData={formData}
+              setFormData={setFormData}
+            />
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex justify-center">
           <p>
             Already have an account?{" "}
             <a href="/login" className="underline text-blue-500">

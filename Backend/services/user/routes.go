@@ -43,10 +43,14 @@ func (h *Handler) handleRegister(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := auth.HashPassword(register.Password)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
+	var err error
+	hashedPassword := ""
+	if register.Password != "" {
+		hashedPassword, err = auth.HashPassword(register.Password)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+			return
+		}
 	}
 
 	err = h.store.CreateUser(&models.User{

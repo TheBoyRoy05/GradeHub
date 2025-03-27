@@ -20,10 +20,10 @@ type Register struct {
 	Firstname string `json:"firstname" validate:"required"`
 	Lastname  string `json:"lastname"  validate:"required"`
 	Email     string `json:"email"     validate:"required,email"`
-	Password  string `json:"password"  validate:"required,min=8,max=64"`
+	Password  string `json:"password"`
 }
 
 type Login struct {
-	Email string `json:"email" validate:"required,email"`
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }

@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import usePOST from "@/Hooks/usePOST";
 import { LoaderCircle } from "lucide-react";
+import { handleAction } from "@/Utils/functions";
 
 const VerificationSchema = z.object({
   code: z
@@ -34,9 +35,9 @@ interface VerificationProps {
 }
 
 const Verification = ({ formData }: VerificationProps) => {
-  type SignUpError = { errors: { longMessage: string }[] };
   const [time, setTime] = useState(30);
   const [loading, setLoading] = useState(false);
+
   const { isLoaded, setActive, signUp } = useSignUp();
   const navigate = useNavigate();
   const { post } = usePOST();
@@ -55,38 +56,30 @@ const Verification = ({ formData }: VerificationProps) => {
   if (!isLoaded) return null;
 
   async function handleVerification(data: z.infer<typeof VerificationSchema>) {
-    if (!isLoaded) return;
-    setLoading(true);
-
-    try {
+    await handleAction(isLoaded, setLoading, async () => {
+      if (!signUp) return;
       const verificationResult = await signUp.attemptEmailAddressVerification({ code: data.code });
 
-      if (verificationResult.status === "complete") {
-        await setActive({ session: verificationResult.createdSessionId });
-        await post({ url: "/register", body: formData, handleData: () => {} });
-        navigate("/dashboard");
-      } else {
-        console.log(JSON.stringify(verificationResult));
+      if (verificationResult.status !== "complete") {
+        toast.error("Verification failed");
+        return;
       }
-    } catch (err: unknown) {
-      console.log(JSON.stringify(err));
-      toast.error((err as SignUpError).errors[0].longMessage);
-    } finally {
-      setLoading(false);
-    }
+
+      await setActive({ session: verificationResult.createdSessionId });
+      await post({ url: "/register", body: formData, handleData: () => {} });
+      toast.success("Verification successful");
+      navigate("/dashboard");
+    })
   }
 
   async function handleResend() {
-    if (!isLoaded || time > 0) return;
-    setTime(30);
+    await handleAction(isLoaded, () => setLoading(false), async () => {
+      if (!signUp || time > 0) return;
+      setTime(30);
 
-    try {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       toast.success("Verification code sent to your email");
-    } catch (err: unknown) {
-      console.log(JSON.stringify(err));
-      toast.error((err as SignUpError).errors[0].longMessage);
-    }
+    })
   }
 
   return (

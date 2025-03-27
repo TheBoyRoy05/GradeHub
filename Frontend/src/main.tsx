@@ -6,7 +6,7 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import LandingPage from "./Pages/Landing/LandingPage";
-import SignUpPage from "./Pages/SignUpPage";
+import SignUpPage from "./Pages/SignUp/SignUpPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {

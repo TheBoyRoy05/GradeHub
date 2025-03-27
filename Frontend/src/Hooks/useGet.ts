@@ -10,7 +10,7 @@ interface GETProps {
   handleData?: (data: Result) => void;
 }
 
-const useGet = ({ url, handleData }: GETProps) => {
+const useGET = ({ url, handleData }: GETProps) => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Result>(null!);
 
@@ -20,7 +20,7 @@ const useGet = ({ url, handleData }: GETProps) => {
       setLoading(true);
 
       try {
-        const res = await fetch(url, {
+        const res = await fetch(`http://localhost:8080/api/v1${url}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           signal: abortSignal, // Attach AbortController signal
@@ -56,4 +56,4 @@ const useGet = ({ url, handleData }: GETProps) => {
   return { data, loading };
 };
 
-export default useGet;
+export default useGET;

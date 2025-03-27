@@ -7,7 +7,7 @@ interface Result {
 
 interface POSTProps {
   url: string;
-  body: never;
+  body: object;
   handleData: (data: Result) => void;
 }
 
@@ -17,7 +17,7 @@ const usePOST = () => {
   const post = async ({ url, body, handleData }: POSTProps) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000${url}`, {
+      const res = await fetch(`http://localhost:8080/api/v1${url}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

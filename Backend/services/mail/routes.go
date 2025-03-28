@@ -36,7 +36,7 @@ func (h *Handler) sendMail(c *gin.Context) {
 	}
 
 	if err := h.mailer.SendMail(mail); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

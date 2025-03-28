@@ -29,7 +29,7 @@ services:
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_PASS: postgres
       DB_NAME: gradehub
     depends_on:
       db:

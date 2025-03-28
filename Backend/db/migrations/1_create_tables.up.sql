@@ -64,3 +64,10 @@ CREATE TABLE IF NOT EXISTS "student_assignment" (
     FOREIGN KEY ("aid") REFERENCES "assignments"("id"),
     FOREIGN KEY ("status_id") REFERENCES "status"("id")
 );
+
+CREATE TABLE IF NOT EXISTS "verification_codes" (
+    "id" SERIAL PRIMARY KEY,
+    "email" VARCHAR(255) NOT NULL,
+    "code" VARCHAR(6) NOT NULL,
+    "expires_at" TIMESTAMP NOT NULL
+);

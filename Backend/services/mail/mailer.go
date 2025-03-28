@@ -1,7 +1,11 @@
 package mail
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/theboyroy05/gradehub/models"
+	"github.com/theboyroy05/gradehub/utils"
 	"gopkg.in/gomail.v2"
 )
 
@@ -12,16 +16,28 @@ func NewMailer() *Mailer {
 }
 
 func (mailer *Mailer) SendMail(mail models.Mail) error {
+	smtpHost := utils.GetEnv("SMTP_HOST", "smtp.gmail.com")
+	smtpPort := utils.GetEnv("SMTP_PORT", "587")
+	smtpUser := utils.GetEnv("SMTP_USER", "2M8B0@example.com")
+	smtpPass := utils.GetEnv("SMTP_PASS", "password")
+
 	newMail := gomail.NewMessage()
-	newMail.SetHeader("From", mail.From)
+	newMail.SetHeader("From", smtpUser)
 	newMail.SetHeader("To", mail.To)
 	newMail.SetHeader("Subject", mail.Subject)
 	newMail.SetBody("text/html", mail.Body)
 
-	dailer := gomail.NewDialer("smtp.example.com", 587, "user", "123456")
+	fmt.Println(smtpHost, smtpPort, smtpUser, smtpPass, mail.To, mail.Subject, mail.Body)
+
+	port, err := strconv.Atoi(smtpPort)
+	if err != nil {
+		return fmt.Errorf("failed to parse SMTP port: %w", err)
+	}
+
+	dailer := gomail.NewDialer(smtpHost, port, smtpUser, smtpPass)
 
 	if err := dailer.DialAndSend(newMail); err != nil {
-		panic(err)
+		return fmt.Errorf("failed to send email: %w", err)
 	}
 
 	return nil

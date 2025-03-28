@@ -15,17 +15,3 @@ type User struct {
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
 }
-
-type SignUp struct {
-	FirstName string `json:"firstName" validate:"required"`
-	LastName  string `json:"lastName"  validate:"required"`
-	Email     string `json:"email"     validate:"required,email"`
-	Password  string `json:"password"`
-	OAuth     bool   `json:"oauth"`
-}
-
-type SignIn struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password"`
-	OAuth    bool   `json:"oauth"`
-}

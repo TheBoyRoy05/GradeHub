@@ -14,7 +14,7 @@ func Connect() *sql.DB {
 		utils.GetEnv("DB_HOST", "db"),
 		utils.GetEnv("DB_PORT", "5432"),
 		utils.GetEnv("DB_USER", "postgres"),
-		utils.GetEnv("DB_PASSWORD", "postgres"),
+		utils.GetEnv("DB_PASS", "postgres"),
 		utils.GetEnv("DB_NAME", "gradehub"),
 	)
 

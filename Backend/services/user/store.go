@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/theboyroy05/gradehub/models"
-	"github.com/theboyroy05/gradehub/services/auth"
+	"github.com/theboyroy05/gradehub/utils"
 )
 
 type Store struct {
@@ -18,6 +18,8 @@ func NewStore(db *sql.DB) *Store {
 
 func (s *Store) parseRows(rows *sql.Rows) (*models.User, error) {
 	var user models.User
+	defer rows.Close()
+	
 	for rows.Next() {
 		err := rows.Scan(
 			&user.ID,
@@ -42,7 +44,7 @@ func (s *Store) parseRows(rows *sql.Rows) (*models.User, error) {
 }
 
 func (s *Store) GetUserByEmail(email string) (*models.User, error) {
-	rows, err := s.db.Query("SELECT * FROM users WHERE email = $1", email)
+	rows, err := s.db.Query("SELECT * FROM users WHERE email = $1 LIMIT 1", email)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +53,8 @@ func (s *Store) GetUserByEmail(email string) (*models.User, error) {
 }
 
 func (s *Store) CreateUser(user *models.User) error {
-	_, err := s.db.Exec("INSERT INTO users (email, password, firstname, lastname, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())",
-		user.Email,
-		user.Password,
-		user.FirstName,
-		user.LastName,
-	)
+	query := "INSERT INTO users (email, password, firstname, lastname, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())"
+	_, err := s.db.Exec(query, user.Email, user.Password, user.FirstName, user.LastName)
 	return err
 }
 
@@ -66,7 +64,7 @@ func (s *Store) SignInUser(login *models.SignIn) (*models.User, error) {
 		return nil, err
 	}
 
-	if auth.CheckPasswordHash(login.Password, user.Password) != nil {
+	if utils.CheckHash(login.Password, user.Password) != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 

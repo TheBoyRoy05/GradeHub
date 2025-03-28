@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/theboyroy05/gradehub/services/auth"
 	"github.com/theboyroy05/gradehub/services/mail"
 	"github.com/theboyroy05/gradehub/services/middleware"
 	"github.com/theboyroy05/gradehub/services/user"
@@ -35,8 +36,9 @@ func (api *API) Run() error {
 	subrouter := router.Group("/api/v1")
 
 	userStore := user.NewStore(api.DB)
-	userHandler := user.NewHandler(userStore)
-	userHandler.RegisterRoutes(subrouter)
+	authStore := auth.NewStore(api.DB)
+	authHandler := auth.NewHandler(authStore, userStore)
+	authHandler.RegisterRoutes(subrouter)
 
 	mailer := mail.NewMailer()
 	mailHandler := mail.NewHandler(mailer)

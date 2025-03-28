@@ -34,15 +34,15 @@ func (api *API) Run() error {
 	router.Use(middleware.CORS())
 
 	subrouter := router.Group("/api/v1")
-
-	userStore := user.NewStore(api.DB)
-	authStore := auth.NewStore(api.DB)
-	authHandler := auth.NewHandler(authStore, userStore)
-	authHandler.RegisterRoutes(subrouter)
-
+	
 	mailer := mail.NewMailer()
 	mailHandler := mail.NewHandler(mailer)
 	mailHandler.RegisterRoutes(subrouter)
+
+	userStore := user.NewStore(api.DB)
+	authStore := auth.NewStore(api.DB)
+	authHandler := auth.NewHandler(authStore, userStore, mailer)
+	authHandler.RegisterRoutes(subrouter)
 
 	return router.Run(api.addr)
 }

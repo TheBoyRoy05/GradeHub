@@ -6,4 +6,4 @@ DROP IF EXISTS "enrolled";
 DROP IF EXISTS "attends";
 DROP IF EXISTS "assignments";
 DROP IF EXISTS "student_assignment";
-DROP IF EXISTS "verification_codes";
+DROP IF EXISTS "verifications";

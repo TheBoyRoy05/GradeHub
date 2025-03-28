@@ -20,6 +20,8 @@ type SignIn struct {
 }
 
 type Verification struct {
-	Email string `json:"email" validate:"required,email"`
-	Code  string `json:"code"  validate:"required"`
+	ID        int    `json:"id"`
+	Email     string `json:"email" validate:"required,email"`
+	Code      string `json:"code"  validate:"required"`
+	ExpiresAt string `json:"expiresAt"`
 }

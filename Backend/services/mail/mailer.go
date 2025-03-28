@@ -27,8 +27,6 @@ func (mailer *Mailer) SendMail(mail models.Mail) error {
 	newMail.SetHeader("Subject", mail.Subject)
 	newMail.SetBody("text/html", mail.Body)
 
-	fmt.Println(smtpHost, smtpPort, smtpUser, smtpPass, mail.To, mail.Subject, mail.Body)
-
 	port, err := strconv.Atoi(smtpPort)
 	if err != nil {
 		return fmt.Errorf("failed to parse SMTP port: %w", err)

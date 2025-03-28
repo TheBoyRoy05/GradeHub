@@ -16,8 +16,8 @@ type Handler struct {
 	mailer    models.Mailer
 }
 
-func NewHandler(authStore models.AuthStore, userStore models.UserStore) *Handler {
-	return &Handler{authStore: authStore, userStore: userStore}
+func NewHandler(authStore models.AuthStore, userStore models.UserStore, mailer models.Mailer) *Handler {
+	return &Handler{authStore: authStore, userStore: userStore, mailer: mailer}
 }
 
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
@@ -190,7 +190,7 @@ func (h *Handler) attemptVerification(c *gin.Context) {
 	}
 
 	if err := h.authStore.AttemptVerification(&verification); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid verification code"})
 		return
 	}
 

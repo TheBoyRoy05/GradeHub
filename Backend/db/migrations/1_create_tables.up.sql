@@ -65,9 +65,9 @@ CREATE TABLE IF NOT EXISTS "student_assignment" (
     FOREIGN KEY ("status_id") REFERENCES "status"("id")
 );
 
-CREATE TABLE IF NOT EXISTS "verification_codes" (
+CREATE TABLE IF NOT EXISTS "verifications" (
     "id" SERIAL PRIMARY KEY,
     "email" VARCHAR(255) NOT NULL,
-    "code" VARCHAR(6) NOT NULL,
+    "code" VARCHAR(255) NOT NULL,
     "expires_at" TIMESTAMP NOT NULL
 );

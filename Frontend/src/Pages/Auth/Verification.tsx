@@ -18,24 +18,21 @@ import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import usePOST from "@/Hooks/usePOST";
 import { LoaderCircle } from "lucide-react";
-import { handleAction } from "@/Utils/functions";
+import useHTTP from "@/Hooks/useHTTP";
+import { UserType } from "@/Utils/types";
+import { useGlobals } from "@/Store/useGlobals";
+import AuthCard from "./AuthCard";
 
 const VerificationSchema = z.object({
   code: z.string().length(6, { message: "Verification code must be 6 characters" }),
 });
 
-interface VerificationProps {
-  formData: { firstname: string; lastname: string; email: string; password: string };
-}
-
-const Verification = ({ formData }: VerificationProps) => {
+const VerificationForm = ({ signUp }: { signUp?: boolean }) => {
   const [time, setTime] = useState(30);
-  const [loading, setLoading] = useState(false);
-
+  const { loading, http } = useHTTP();
+  const { formData, setUser } = useGlobals();
   const navigate = useNavigate();
-  const { post } = usePOST();
 
   const form = useForm<z.infer<typeof VerificationSchema>>({
     resolver: zodResolver(VerificationSchema),
@@ -48,24 +45,55 @@ const Verification = ({ formData }: VerificationProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  async function handleVerification() {
-    await handleAction(setLoading, async () => {
-      await post({ url: "/sign-up", body: formData, handleData: () => {} });
-      toast.success("Verification successful");
-      navigate("/dashboard");
+  async function handleSignUp() {
+    await http({
+      url: "/sign-up",
+      method: "POST",
+      body: formData,
+      handleData: ({ token, user }: { token: string; user: UserType }) => {
+        localStorage.setItem("jwt", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+      },
+      handleSuccess: () => {
+        toast.success("Sign Up Successful, Welcome to GradeHub");
+        navigate("/dashboard");
+      },
     });
   }
 
-  async function handleResend() {
-    await handleAction(
-      () => setLoading(false),
-      async () => {
-        if (time > 0) return;
-        setTime(30);
+  async function handleVerification(data: z.infer<typeof VerificationSchema>) {
+    const verified = await http({
+      url: `/attempt-verification?code=${data.code}`,
+      method: "POST",
+      body: formData,
+      handleData: ({ token, user }: { token: string; user: UserType }) => {
+        localStorage.setItem("jwt", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+      },
+      handleSuccess: () => {
+        toast.success("Verification Successful");
+      },
+    });
+    if (!verified) return; 
 
+    if (signUp) handleSignUp();
+    else navigate("/reset-password");
+  }
+
+  async function handleResend() {
+    if (time > 0) return;
+    setTime(30);
+
+    await http({
+      url: "/prepare-verification",
+      method: "POST",
+      body: formData,
+      handleSuccess: () => {
         toast.success("Verification code sent to your email");
-      }
-    );
+      },
+    });
   }
 
   return (
@@ -110,11 +138,21 @@ const Verification = ({ formData }: VerificationProps) => {
           )}
         />
 
-        <Button type="submit" className="hover:cursor-pointer w-full">
+        <Button type="submit" className="hover:cursor-pointer w-full" disabled={loading}>
           {loading ? <LoaderCircle className="animate-spin" /> : "Verify"}
         </Button>
       </form>
     </Form>
+  );
+};
+
+const Verification = ({ signUp }: { signUp?: boolean }) => {
+  return (
+    <AuthCard
+      title="Verification"
+      description="Please enter the verification code sent to your email"
+      form={<VerificationForm signUp={signUp} />}
+    />
   );
 };
 

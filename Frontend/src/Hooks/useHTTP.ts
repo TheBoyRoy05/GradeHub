@@ -21,15 +21,18 @@ const useHTTP = () => {
     try {
       const { data } = await axios({
         method,
+        headers: { "Content-Type": "application/json" },
         url: `http://localhost:8080/api/v1${url}`,
         data: body,
-      })
+      });
 
       // console.log(data);
       if (data.error) throw new Error(data.error);
 
       if (handleData) handleData(data);
       if (handleSuccess) handleSuccess();
+
+      return true;
     } catch (error) {
       console.error(error);
       const message = axios.isAxiosError(error)
@@ -37,6 +40,8 @@ const useHTTP = () => {
         : "An unexpected error occurred";
       toast.error(message);
       if (handleError) handleError(error);
+
+      return false;
     } finally {
       setLoading(false);
     }

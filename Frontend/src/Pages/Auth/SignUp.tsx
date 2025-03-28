@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -20,11 +20,11 @@ import { LoaderCircle } from "lucide-react";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import passwordEye from "@/Components/PasswordEye";
-import { handleAction } from "@/Utils/functions";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useGlobals } from "@/Store/useGlobals";
 import { UserType } from "@/Utils/types";
 import useHTTP from "@/Hooks/useHTTP";
+import AuthCard from "./AuthCard";
 
 const SignUpSchema = z.object({
   firstName: z.string(),
@@ -33,56 +33,48 @@ const SignUpSchema = z.object({
   password: z.string().min(8, { message: "Password must be at least 8 characters" }),
 });
 
-interface SignUpProps {
-  setPendingVerification: React.Dispatch<React.SetStateAction<boolean>>;
-  formData: { firstname: string; lastname: string; email: string; password: string };
-  setFormData: React.Dispatch<
-    React.SetStateAction<{ firstname: string; lastname: string; email: string; password: string }>
-  >;
-}
-
-const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) => {
+const SignUpForm = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof SignUpSchema>>({ resolver: zodResolver(SignUpSchema) });
-  const { setUser } = useGlobals();
+  const { loading, http } = useHTTP();
+  const { formData, setFormData, setUser } = useGlobals();
   const navigate = useNavigate();
-  const { http } = useHTTP();
 
   async function handleSubmit() {
-    await handleAction(setLoading, async () => {
-      
-      setPendingVerification(true);
-      toast.success("Verification code sent to your email");
-    });
+    await http({
+      url: "/prepare-verification?signUp=true",
+      method: "POST",
+      body: formData,
+      handleSuccess: () => {
+        toast.success("Verification code sent to your email");
+        navigate("/verify-sign-up");
+      }
+    })
   }
 
   async function handleGoogleSignUp(tokenResponse: CredentialResponse) {
-    await handleAction(setLoading, async () => {
-      type GoogleUser = { given_name: string; family_name: string; email: string };
-      const googleUser: GoogleUser = jwtDecode(tokenResponse.credential!);
+    type GoogleUser = { given_name: string; family_name: string; email: string };
+    const googleUser: GoogleUser = jwtDecode(tokenResponse.credential!);
 
-      await http({
-        url: "/sign-up",
-        method: "POST",
-        body: {
-          firstName: googleUser.given_name,
-          lastName: googleUser.family_name,
-          email: googleUser.email,
-          password: "",
-          oauth: true,
-        },
-        handleData: ({ token, user }: { token: string; user: UserType }) => {
-          localStorage.setItem("jwt", token);
-          localStorage.setItem("chat-user", JSON.stringify(user));
-          setUser(user);
-        },
-        handleSuccess: () => {
-          toast.success("Sign up successful");
-          navigate("/dashboard");
-        },
-      });
+    await http({
+      url: "/sign-up",
+      method: "POST",
+      body: {
+        firstName: googleUser.given_name,
+        lastName: googleUser.family_name,
+        email: googleUser.email,
+        oauth: true,
+      },
+      handleData: ({ token, user }: { token: string; user: UserType }) => {
+        localStorage.setItem("jwt", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+      },
+      handleSuccess: () => {
+        toast.success("Sign up successful");
+        navigate("/dashboard");
+      },
     });
   }
 
@@ -115,7 +107,7 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
                       placeholder="First Name"
                       {...field}
                       onChange={(e) => {
-                        setFormData({ ...formData, firstname: e.target.value });
+                        setFormData({ ...formData, firstName: e.target.value });
                         field.onChange(e);
                       }}
                     />
@@ -135,7 +127,7 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
                       placeholder="Last Name"
                       {...field}
                       onChange={(e) => {
-                        setFormData({ ...formData, lastname: e.target.value });
+                        setFormData({ ...formData, lastName: e.target.value });
                         field.onChange(e);
                       }}
                     />
@@ -175,7 +167,7 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     {...field}
                     onChange={(e) => {
@@ -190,7 +182,7 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
             )}
           />
 
-          <Button type="submit" className="hover:cursor-pointer">
+          <Button type="submit" className="hover:cursor-pointer" disabled={loading}>
             {loading ? <LoaderCircle className="animate-spin" /> : "Sign Up"}
           </Button>
         </form>
@@ -198,5 +190,23 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
     </div>
   );
 };
+
+function SignUp() {
+  return (
+    <AuthCard
+      title="Sign Up"
+      description="Welcome! Please fill in the details to get started."
+      form={<SignUpForm />}
+      footer={
+        <p>
+          Already have an account?{" "}
+          <Link to="/sign-in" className="underline text-blue-500">
+            Sign In
+          </Link>
+        </p>
+      }
+    />
+  );
+}
 
 export default SignUp;

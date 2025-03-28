@@ -1,5 +1,5 @@
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,39 +22,32 @@ import { Input } from "@/Components/UI/input";
 import { LoaderCircle } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
-import { UserType } from "@/Utils/types";
+import { AuthFormType, UserType } from "@/Utils/types";
 import { useGlobals } from "@/Store/useGlobals";
 import useHTTP from "@/Hooks/useHTTP";
+import AuthCard from "./AuthCard";
 
 const SignInSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  password: z.string(),
 });
 
-interface SignInProps {
-  formData: { firstname: string; lastname: string; email: string; password: string };
-  setFormData: React.Dispatch<
-    React.SetStateAction<{ firstname: string; lastname: string; email: string; password: string }>
-  >;
-}
-
-const SignIn = ({ formData, setFormData }: SignInProps) => {
-  type SignInType = { email: string; password: string; oauth?: boolean };
+const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof SignInSchema>>({ resolver: zodResolver(SignInSchema) });
   const { loading, http } = useHTTP();
-  const { setUser } = useGlobals();
+  const { formData, setFormData, setUser } = useGlobals();
   const navigate = useNavigate();
 
-  const signIn = async ({ email, password, oauth }: SignInType) =>
+  const signIn = async ({ email, password, oauth }: AuthFormType) =>
     await http({
       url: "/sign-in",
       method: "POST",
       body: { email, password, oauth },
       handleData: ({ token, user }: { token: string; user: UserType }) => {
         localStorage.setItem("jwt", token);
-        localStorage.setItem("chat-user", JSON.stringify(user));
+        localStorage.setItem("user", JSON.stringify(user));
         setUser(user);
       },
       handleSuccess: () => {
@@ -116,7 +110,7 @@ const SignIn = ({ formData, setFormData }: SignInProps) => {
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     {...field}
                     onChange={(e) => {
@@ -127,11 +121,16 @@ const SignIn = ({ formData, setFormData }: SignInProps) => {
                   />
                 </FormControl>
                 <FormMessage />
+                <FormDescription>
+                  <Link to="/forgot-password" className="underline text-blue-500">
+                    Forgot Password?
+                  </Link>
+                </FormDescription>
               </FormItem>
             )}
           />
 
-          <Button type="submit" className="hover:cursor-pointer">
+          <Button type="submit" className="hover:cursor-pointer" disabled={loading}>
             {loading ? <LoaderCircle className="animate-spin" /> : "Sign In"}
           </Button>
         </form>
@@ -139,5 +138,23 @@ const SignIn = ({ formData, setFormData }: SignInProps) => {
     </div>
   );
 };
+
+function SignIn() {
+  return (
+    <AuthCard
+      title="Sign In"
+      description="Welcome back! Please fill in the details to sign in."
+      form={<SignInForm />}
+      footer={
+        <p>
+          Don't have an account?{" "}
+          <Link to="/sign-up" className="underline text-blue-500">
+            Sign Up
+          </Link>
+        </p>
+      }
+    />
+  );
+}
 
 export default SignIn;

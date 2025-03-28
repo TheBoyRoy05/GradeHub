@@ -1,6 +1,6 @@
 import * as React from "react";
 import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/Utils/functions"
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {

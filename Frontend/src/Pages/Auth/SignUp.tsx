@@ -1,4 +1,3 @@
-import { useSignUp } from "@clerk/clerk-react";
 import React, { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,10 +19,12 @@ import { LoaderCircle } from "lucide-react";
 
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
-import usePOST from "@/Hooks/usePOST";
 import passwordEye from "@/Components/PasswordEye";
 import { handleAction } from "@/Utils/functions";
-import { Skeleton } from "@/Components/UI/skeleton";
+import { useNavigate } from "react-router-dom";
+import { useGlobals } from "@/Store/useGlobals";
+import { UserType } from "@/Utils/types";
+import useHTTP from "@/Hooks/useHTTP";
 
 const SignUpSchema = z.object({
   firstName: z.string(),
@@ -45,70 +46,56 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
   const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof SignUpSchema>>({ resolver: zodResolver(SignUpSchema) });
-  const { isLoaded, signUp } = useSignUp();
-  const { post } = usePOST();
+  const { setUser } = useGlobals();
+  const navigate = useNavigate();
+  const { http } = useHTTP();
 
-  async function handleSubmit(data: z.infer<typeof SignUpSchema>) {
-    await handleAction(isLoaded, setLoading, async () => {
-      if (!signUp) return;
-
-      await signUp.create({
-        emailAddress: data.email,
-        password: data.password,
-        unsafeMetadata: {
-          firstName: data.firstName,
-          lastName: data.lastName,
-        },
-      });
-
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+  async function handleSubmit() {
+    await handleAction(setLoading, async () => {
+      
       setPendingVerification(true);
       toast.success("Verification code sent to your email");
     });
   }
 
   async function handleGoogleSignUp(tokenResponse: CredentialResponse) {
-    await handleAction(isLoaded, setLoading, async () => {
-      if (!signUp) return;
+    await handleAction(setLoading, async () => {
       type GoogleUser = { given_name: string; family_name: string; email: string };
-      const user: GoogleUser = jwtDecode(tokenResponse.credential!);
+      const googleUser: GoogleUser = jwtDecode(tokenResponse.credential!);
 
-      await signUp.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/dashboard",
-        redirectUrlComplete: "/dashboard",
+      await http({
+        url: "/sign-up",
+        method: "POST",
+        body: {
+          firstName: googleUser.given_name,
+          lastName: googleUser.family_name,
+          email: googleUser.email,
+          password: "",
+          oauth: true,
+        },
+        handleData: ({ token, user }: { token: string; user: UserType }) => {
+          localStorage.setItem("jwt", token);
+          localStorage.setItem("chat-user", JSON.stringify(user));
+          setUser(user);
+        },
+        handleSuccess: () => {
+          toast.success("Sign up successful");
+          navigate("/dashboard");
+        },
       });
-
-      if (signUp.status !== "complete") {
-        toast.error("Google login failed");
-        return;
-      }
-
-      const body = {
-        firstname: user.given_name,
-        lastname: user.family_name,
-        email: user.email,
-        password: "",
-      };
-
-      await post({ url: "/register", body, handleData: () => {} });
     });
   }
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {isLoaded ? (
-        <GoogleLogin
-          onSuccess={handleGoogleSignUp}
-          onError={() => toast.error("Google login failed")}
-          size="large"
-          text="signup_with"
-          shape="pill"
-          width="300"
-        />
-      ) : (
-        <Skeleton className="w-[300px] h-10 rounded-full" />
-      )}
+      <GoogleLogin
+        onSuccess={handleGoogleSignUp}
+        onError={() => toast.error("Google login failed")}
+        size="large"
+        text="signup_with"
+        shape="pill"
+        width="300"
+      />
       <div className="flex items-center w-full gap-4">
         <div className="flex-1 border border-gray-300" />
         <span className="text-sm text-gray-500">or continue with</span>
@@ -124,18 +111,14 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
                 <FormItem className="flex-1">
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    {isLoaded ? (
-                      <Input
-                        placeholder="First Name"
-                        {...field}
-                        onChange={(e) => {
-                          setFormData({ ...formData, firstname: e.target.value });
-                          field.onChange(e);
-                        }}
-                      />
-                    ) : (
-                      <Skeleton className="w-full h-[40px] rounded-md" />
-                    )}
+                    <Input
+                      placeholder="First Name"
+                      {...field}
+                      onChange={(e) => {
+                        setFormData({ ...formData, firstname: e.target.value });
+                        field.onChange(e);
+                      }}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -148,18 +131,14 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
                 <FormItem className="flex-1">
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    {isLoaded ? (
-                      <Input
-                        placeholder="Last Name"
-                        {...field}
-                        onChange={(e) => {
-                          setFormData({ ...formData, lastname: e.target.value });
-                          field.onChange(e);
-                        }}
-                      />
-                    ) : (
-                      <Skeleton className="w-full h-[40px] rounded-md" />
-                    )}
+                    <Input
+                      placeholder="Last Name"
+                      {...field}
+                      onChange={(e) => {
+                        setFormData({ ...formData, lastname: e.target.value });
+                        field.onChange(e);
+                      }}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -173,19 +152,15 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  {isLoaded ? (
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      {...field}
-                      onChange={(e) => {
-                        setFormData({ ...formData, email: e.target.value });
-                        field.onChange(e);
-                      }}
-                    />
-                  ) : (
-                    <Skeleton className="w-full h-[40px] rounded-md" />
-                  )}
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    {...field}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      field.onChange(e);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -199,20 +174,16 @@ const SignUp = ({ setPendingVerification, formData, setFormData }: SignUpProps) 
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  {isLoaded ? (
-                    <Input
-                      type="password"
-                      placeholder="Password"
-                      {...field}
-                      onChange={(e) => {
-                        setFormData({ ...formData, password: e.target.value });
-                        field.onChange(e);
-                      }}
-                      endIcon={passwordEye(showPassword, setShowPassword)}
-                    />
-                  ) : (
-                    <Skeleton className="w-full h-[40px] rounded-md" />
-                  )}
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    {...field}
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                      field.onChange(e);
+                    }}
+                    endIcon={passwordEye(showPassword, setShowPassword)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

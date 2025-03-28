@@ -18,13 +18,12 @@ import passwordEye from "@/Components/PasswordEye";
 import { Button } from "@/Components/UI/button";
 import { Input } from "@/Components/UI/input";
 
-import { handleAction } from "@/Utils/functions";
-import { useSignIn } from "@clerk/clerk-react";
 import { LoaderCircle } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
-import usePOST from "@/Hooks/usePOST";
 import { useState } from "react";
-import { Skeleton } from "@/Components/UI/skeleton";
+import { UserType } from "@/Utils/types";
+import { useGlobals } from "@/Store/useGlobals";
+import useHTTP from "@/Hooks/useHTTP";
 
 const SignInSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -39,80 +38,54 @@ interface SignInProps {
 }
 
 const SignIn = ({ formData, setFormData }: SignInProps) => {
+  type SignInType = { email: string; password: string; oauth?: boolean };
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof SignInSchema>>({ resolver: zodResolver(SignInSchema) });
-  const { isLoaded, signIn, setActive } = useSignIn();
+  const { loading, http } = useHTTP();
+  const { setUser } = useGlobals();
   const navigate = useNavigate();
-  const { post } = usePOST();
 
-  async function handleSubmit(data: z.infer<typeof SignInSchema>) {
-    await handleAction(isLoaded, setLoading, async () => {
-      if (!signIn) return;
-      await signIn.create({
-        strategy: "password",
-        identifier: data.email,
-        password: data.password,
-      });
-
-      if (signIn.status !== "complete") {
-        toast.error("Sign in failed");
-        return;
-      }
-
-      await setActive({ session: signIn.createdSessionId });
-      await post({ url: "/login", body: formData, handleData: () => {} });
-      toast.success("Sign in successful");
-      navigate("/dashboard");
+  const signIn = async ({ email, password, oauth }: SignInType) =>
+    await http({
+      url: "/sign-in",
+      method: "POST",
+      body: { email, password, oauth },
+      handleData: ({ token, user }: { token: string; user: UserType }) => {
+        localStorage.setItem("jwt", token);
+        localStorage.setItem("chat-user", JSON.stringify(user));
+        setUser(user);
+      },
+      handleSuccess: () => {
+        toast.success("Sign In Successful");
+        navigate("/dashboard");
+      },
     });
-  }
 
   async function handleGoogleSignIn(tokenResponse: CredentialResponse) {
-    await handleAction(isLoaded, setLoading, async () => {
-      if (!signIn) return;
-      const user: { email: string } = jwtDecode(tokenResponse.credential!);
-
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/dashboard",
-        redirectUrlComplete: "/dashboard",
-      });
-
-      if (signIn.status !== "complete") {
-        toast.error("Google login failed");
-        return;
-      }
-
-      const body = {
-        email: user.email,
-        password: "",
-      };
-
-      await post({ url: "/login", body, handleData: () => {} });
-    });
+    const googleUser: { email: string } = jwtDecode(tokenResponse.credential!);
+    signIn({ email: googleUser.email, password: "", oauth: true });
   }
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {isLoaded ? (
-        <GoogleLogin
-          onSuccess={handleGoogleSignIn}
-          onError={() => toast.error("Google login failed")}
-          size="large"
-          shape="pill"
-          width="300"
-        />
-      ) : (
-        <Skeleton className="w-[300px] h-10 rounded-full" />
-      )}
+      <GoogleLogin
+        onSuccess={handleGoogleSignIn}
+        onError={() => toast.error("Google login failed")}
+        size="large"
+        shape="pill"
+        width="300"
+      />
       <div className="flex items-center w-full gap-4">
         <div className="flex-1 border border-gray-300" />
         <span className="text-sm text-gray-500">or continue with</span>
         <div className="flex-1 border border-gray-300" />
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4 w-full">
+        <form
+          onSubmit={form.handleSubmit(() => signIn(formData))}
+          className="flex flex-col gap-4 w-full"
+        >
           <FormField
             control={form.control}
             name="email"
@@ -120,19 +93,15 @@ const SignIn = ({ formData, setFormData }: SignInProps) => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  {isLoaded ? (
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      {...field}
-                      onChange={(e) => {
-                        setFormData({ ...formData, email: e.target.value });
-                        field.onChange(e);
-                      }}
-                    />
-                  ) : (
-                    <Skeleton className="w-full h-[40px] rounded-md" />
-                  )}
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    {...field}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      field.onChange(e);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -146,20 +115,16 @@ const SignIn = ({ formData, setFormData }: SignInProps) => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  {isLoaded ? (
-                    <Input
-                      type="password"
-                      placeholder="Password"
-                      {...field}
-                      onChange={(e) => {
-                        setFormData({ ...formData, password: e.target.value });
-                        field.onChange(e);
-                      }}
-                      endIcon={passwordEye(showPassword, setShowPassword)}
-                    />
-                  ) : (
-                    <Skeleton className="w-full h-[40px] rounded-md" />
-                  )}
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    {...field}
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                      field.onChange(e);
+                    }}
+                    endIcon={passwordEye(showPassword, setShowPassword)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -2,31 +2,14 @@ import "./index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Toaster } from "./Components/UI/sonner";
-import { ClerkProvider } from "@clerk/clerk-react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-
-import LandingPage from "./Pages/Landing/LandingPage";
-import AuthPage from "./Pages/Auth/AuthPage";
-
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Publishable Key");
-}
+import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Toaster />
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/signup" element={<AuthPage />} />
-            <Route path="/signin" element={<AuthPage signIn />} />
-          </Routes>
-        </BrowserRouter>
-      </GoogleOAuthProvider>
-    </ClerkProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <App />
+    </GoogleOAuthProvider>
   </StrictMode>
 );

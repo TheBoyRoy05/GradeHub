@@ -1,11 +1,15 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 import { toast } from "sonner";
 
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
 export async function handleAction(
-  isLoaded: boolean,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   action: () => Promise<void>
 ) {
-  if (!isLoaded) return;
   type AuthError = { errors: { longMessage: string }[] };
   setLoading(true);
 
@@ -18,3 +22,15 @@ export async function handleAction(
     setLoading(false);
   }
 }
+
+export const createSetter =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  <StoreType>(set: any) =>
+  <T extends keyof StoreType>(key: T) =>
+  (value: StoreType[T] | ((prev: StoreType[T]) => StoreType[T])) =>
+    set((state: StoreType) => ({
+      [key]:
+        typeof value === "function"
+          ? (value as (prev: StoreType[T]) => StoreType[T])(state[key])
+          : value,
+    }));

@@ -23,8 +23,8 @@ func (s *Store) parseRows(rows *sql.Rows) (*models.User, error) {
 			&user.ID,
 			&user.Email,
 			&user.Password,
-			&user.Firstname,
-			&user.Lastname,
+			&user.FirstName,
+			&user.LastName,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		)
@@ -54,13 +54,13 @@ func (s *Store) CreateUser(user *models.User) error {
 	_, err := s.db.Exec("INSERT INTO users (email, password, firstname, lastname, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())",
 		user.Email,
 		user.Password,
-		user.Firstname,
-		user.Lastname,
+		user.FirstName,
+		user.LastName,
 	)
 	return err
 }
 
-func (s *Store) LoginUser(login *models.Login) (*models.User, error) {
+func (s *Store) SignInUser(login *models.SignIn) (*models.User, error) {
 	user, err := s.GetUserByEmail(login.Email)
 	if err != nil {
 		return nil, err

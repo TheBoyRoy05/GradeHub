@@ -12,7 +12,6 @@ import { Button } from "@/Components/UI/button";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { toast } from "sonner";
 
-import { useSignUp } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -22,13 +21,9 @@ import { z } from "zod";
 import usePOST from "@/Hooks/usePOST";
 import { LoaderCircle } from "lucide-react";
 import { handleAction } from "@/Utils/functions";
-import { Skeleton } from "@/Components/UI/skeleton";
 
 const VerificationSchema = z.object({
-  code: z
-    .string()
-    .length(6, { message: "Verification code must be 6 characters" })
-    .regex(/^\d+$/, { message: "Verification code must be numeric" }),
+  code: z.string().length(6, { message: "Verification code must be 6 characters" }),
 });
 
 interface VerificationProps {
@@ -39,7 +34,6 @@ const Verification = ({ formData }: VerificationProps) => {
   const [time, setTime] = useState(30);
   const [loading, setLoading] = useState(false);
 
-  const { isLoaded, setActive, signUp } = useSignUp();
   const navigate = useNavigate();
   const { post } = usePOST();
 
@@ -49,23 +43,14 @@ const Verification = ({ formData }: VerificationProps) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTime((time) => isLoaded ? (time > 0 ? time - 1 : 0) : time);
+      setTime((time) => (time > 0 ? time - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
-  }, [isLoaded]);
+  }, []);
 
-  async function handleVerification(data: z.infer<typeof VerificationSchema>) {
-    await handleAction(isLoaded, setLoading, async () => {
-      if (!signUp) return;
-      const verificationResult = await signUp.attemptEmailAddressVerification({ code: data.code });
-
-      if (verificationResult.status !== "complete") {
-        toast.error("Verification failed");
-        return;
-      }
-
-      await setActive({ session: verificationResult.createdSessionId });
-      await post({ url: "/register", body: formData, handleData: () => {} });
+  async function handleVerification() {
+    await handleAction(setLoading, async () => {
+      await post({ url: "/sign-up", body: formData, handleData: () => {} });
       toast.success("Verification successful");
       navigate("/dashboard");
     });
@@ -73,13 +58,11 @@ const Verification = ({ formData }: VerificationProps) => {
 
   async function handleResend() {
     await handleAction(
-      isLoaded,
       () => setLoading(false),
       async () => {
-        if (!signUp || time > 0) return;
+        if (time > 0) return;
         setTime(30);
 
-        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
         toast.success("Verification code sent to your email");
       }
     );
@@ -101,15 +84,11 @@ const Verification = ({ formData }: VerificationProps) => {
                 <InputOTP maxLength={6} {...field} pattern={REGEXP_ONLY_DIGITS}>
                   {Array(6)
                     .fill(null)
-                    .map((_, index) =>
-                      isLoaded ? (
-                        <InputOTPGroup key={index}>
-                          <InputOTPSlot index={index} className="w-12 h-12 text-lg font-bold" />
-                        </InputOTPGroup>
-                      ) : (
-                        <Skeleton key={index} className="w-12 h-12 text-lg font-bold" />
-                      )
-                    )}
+                    .map((_, index) => (
+                      <InputOTPGroup key={index}>
+                        <InputOTPSlot index={index} className="w-12 h-12 text-lg font-bold" />
+                      </InputOTPGroup>
+                    ))}
                 </InputOTP>
               </FormControl>
 

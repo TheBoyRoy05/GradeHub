@@ -1,12 +1,12 @@
 package api
 
 import (
-	"time"
 	"database/sql"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
 
+	"github.com/theboyroy05/gradehub/services/mail"
+	"github.com/theboyroy05/gradehub/services/middleware"
 	"github.com/theboyroy05/gradehub/services/user"
 	"github.com/theboyroy05/gradehub/utils"
 )
@@ -30,21 +30,17 @@ func (api *API) Run() error {
 
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
-
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	router.Use(middleware.CORS())
 
 	subrouter := router.Group("/api/v1")
 
 	userStore := user.NewStore(api.DB)
 	userHandler := user.NewHandler(userStore)
 	userHandler.RegisterRoutes(subrouter)
+
+	mailer := mail.NewMailer()
+	mailHandler := mail.NewHandler(mailer)
+	mailHandler.RegisterRoutes(subrouter)
 
 	return router.Run(api.addr)
 }

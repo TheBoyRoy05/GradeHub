@@ -19,45 +19,46 @@ func NewHandler(store models.UserStore) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
-	router.POST("/register", h.handleRegister)
-	router.POST("/login", h.handleLogin)
-	router.POST("/logout", h.handleLogout)
+	router.POST("/sign-up", h.handleSignUp)
+	router.POST("/sign-in", h.handleSignIn)
+	router.POST("/sign-out", h.handleSignOut)
 }
 
-func (h *Handler) handleRegister(c *gin.Context) {
-	var register models.Register
+func (h *Handler) handleSignUp(c *gin.Context) {
+	var signUp models.SignUp
 
-	if err := c.ShouldBindJSON(&register); err != nil {
+	if err := c.ShouldBindJSON(&signUp); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	if err := utils.Validator.Struct(register); err != nil {
+	if err := utils.Validator.Struct(signUp); err != nil {
 		error := err.(validator.ValidationErrors)
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error()})
 		return
 	}
 
-	if _, err := h.store.GetUserByEmail(register.Email); err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
+	if _, err := h.store.GetUserByEmail(signUp.Email); err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists in the database"})
 		return
 	}
 
-	var err error
-	hashedPassword := ""
-	if register.Password != "" {
-		hashedPassword, err = auth.HashPassword(register.Password)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-			return
-		}
+	if !signUp.OAuth && signUp.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password is required"})
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(signUp.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
 	}
 
 	err = h.store.CreateUser(&models.User{
-		Email:     register.Email,
+		Email:     signUp.Email,
 		Password:  hashedPassword,
-		Firstname: register.Firstname,
-		Lastname:  register.Lastname,
+		FirstName: signUp.FirstName,
+		LastName:  signUp.LastName,
 	})
 
 	if err != nil {
@@ -65,32 +66,55 @@ func (h *Handler) handleRegister(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+	user, err := h.store.GetUserByEmail(signUp.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
+		return
+	}
+
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"user": user, "token": token})
 }
 
-func (h *Handler) handleLogin(c *gin.Context) {
-	var login models.Login
+func (h *Handler) handleSignIn(c *gin.Context) {
+	var signIn models.SignIn
 
-	if err := c.ShouldBindJSON(&login); err != nil {
+	if err := c.ShouldBindJSON(&signIn); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	if err := utils.Validator.Struct(login); err != nil {
+	if err := utils.Validator.Struct(signIn); err != nil {
 		error := err.(validator.ValidationErrors)
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error()})
 		return
 	}
 
-	user, err := h.store.LoginUser(&login)
+	if !signIn.OAuth && signIn.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password is required"})
+		return
+	}
+
+	user, err := h.store.SignInUser(&signIn)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user, "token": token})
 }
 
-func (h *Handler) handleLogout(c *gin.Context) {
+func (h *Handler) handleSignOut(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }

@@ -25,7 +25,7 @@ func CheckHash(password, hash string) error {
 
 func GenerateToken(userID int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": userID,                                // User ID claim
+		"userID": userID,                                 // User ID claim
 		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Expiration time (1 day)
 		"iat":     time.Now().Unix(),                     // Issued at time
 	})

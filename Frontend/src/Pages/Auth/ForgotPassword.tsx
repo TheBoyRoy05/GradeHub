@@ -33,13 +33,13 @@ const ForgotPasswordForm = () => {
 
   async function handleForgotPassword(data: z.infer<typeof ForgotPasswordSchema>) {
     await http({
-      url: "/prepare-verification",
+      url: "/auth/prepare-verification",
       method: "POST",
       body: data,
       handleSuccess: () => {
         toast.success("Reset code sent to your email");
         localStorage.setItem("email", data.email);
-        navigate("/verify-reset");
+        navigate("/auth/verify");
       },
     });
   }

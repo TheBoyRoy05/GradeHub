@@ -7,6 +7,7 @@ import (
 
 	"github.com/theboyroy05/gradehub/services/mail"
 	"github.com/theboyroy05/gradehub/services/middleware"
+	"github.com/theboyroy05/gradehub/services/school"
 	"github.com/theboyroy05/gradehub/services/user"
 	"github.com/theboyroy05/gradehub/utils"
 )
@@ -31,16 +32,18 @@ func (api *API) Run() error {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
 	router.Use(middleware.CORS())
-
 	subrouter := router.Group("/api/v1")
 	
+	authRouter := subrouter.Group("/auth")
 	mailer := mail.NewMailer()
-	mailHandler := mail.NewHandler(mailer)
-	mailHandler.RegisterRoutes(subrouter)
-
 	userStore := user.NewStore(api.DB)
 	userHandler := user.NewHandler(userStore, mailer)
-	userHandler.RegisterRoutes(subrouter)
+	userHandler.RegisterRoutes(authRouter)
+
+	schoolRouter := subrouter.Group("/school")
+	schoolStore := school.NewStore(api.DB)
+	schoolHandler := school.NewHandler(schoolStore)
+	schoolHandler.RegisterRoutes(schoolRouter)
 
 	return router.Run(api.addr)
 }

@@ -39,7 +39,7 @@ const ResetPasswordForm = () => {
     if (!email) email = localStorage.getItem("email");
 
     await http({
-      url: "/reset-password",
+      url: "/auth/reset-password",
       method: "PATCH",
       body: {
         email,
@@ -48,7 +48,7 @@ const ResetPasswordForm = () => {
       handleSuccess: () => {
         toast.success("Password reset successful");
         localStorage.removeItem("email");
-        navigate("/sign-in");
+        navigate("/auth/sign-in");
       },
     });
   }

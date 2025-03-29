@@ -42,7 +42,7 @@ const SignInForm = () => {
 
   const signIn = async ({ email, password, oauth }: AuthFormType) =>
     await http({
-      url: "/sign-in",
+      url: "/auth/sign-in",
       method: "POST",
       body: { email, password, oauth },
       handleData: ({ token, user }: { token: string; user: UserType }) => {
@@ -122,7 +122,7 @@ const SignInForm = () => {
                 </FormControl>
                 <FormMessage />
                 <FormDescription>
-                  <Link to="/forgot-password" className="underline text-blue-500">
+                  <Link to="/auth/forgot-password" className="underline text-blue-500">
                     Forgot Password?
                   </Link>
                 </FormDescription>
@@ -148,7 +148,7 @@ function SignIn() {
       footer={
         <p>
           Don't have an account?{" "}
-          <Link to="/sign-up" className="underline text-blue-500">
+          <Link to="/auth/sign-up" className="underline text-blue-500">
             Sign Up
           </Link>
         </p>

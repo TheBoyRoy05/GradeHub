@@ -13,19 +13,23 @@ const App = () => {
 
   useEffect(() => {
     const currentUser = localStorage.getItem("user");
-    if (currentUser) setUser( JSON.parse(currentUser) );
+    if (currentUser) setUser(JSON.parse(currentUser));
   }, [setUser]);
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/sign-in" element={<SignIn />} />
-        <Route path="/verify-sign-up" element={<Verification signUp />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-reset" element={<Verification />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route index element={<LandingPage />} />
+        <Route path="auth">
+          <Route path="sign-up" element={<SignUp />} />
+          <Route path="sign-in" element={<SignIn />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
+          <Route path="verify">
+            <Route index element={<Verification />} />
+            <Route path="sign-up" element={<Verification signUp />} />
+          </Route>
+        </Route>
       </Routes>
     </BrowserRouter>
   );

@@ -18,43 +18,42 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
-func ParseRows(rows *sql.Rows, dest any) error {
+func ParseRows[T any](rows *sql.Rows) ([]T, error) {
 	defer rows.Close()
 
-	// Ensure dest is a non-nil pointer
-	ptrValue := reflect.ValueOf(dest)
-	if ptrValue.Kind() != reflect.Ptr || ptrValue.IsNil() {
-		return fmt.Errorf("dest must be a non-nil pointer")
+	var t T
+	var result []T
+	structType := reflect.TypeOf(t)
+
+	if structType.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("type must be a struct")
 	}
 
-	// Dereference the pointer to get the underlying struct
-	value := ptrValue.Elem()
-	if value.Kind() != reflect.Struct {
-		return fmt.Errorf("dest must be a non-nil pointer to a struct")
-	}
+	for rows.Next() {
+		rowValue := reflect.New(structType).Elem()
 
-	// Check if rows contain data
-	if !rows.Next() {
-		return fmt.Errorf("%s not found", value.Type().Name())
-	}
+		numFields := rowValue.NumField()
+		args := make([]any, numFields)
 
-	// Prepare arguments for scanning
-	numFields := value.NumField()
-	args := make([]any, numFields)
-
-	for i := range numFields {
-		field := value.Field(i)
-		if field.CanAddr() {
-			args[i] = field.Addr().Interface()
-		} else {
-			return fmt.Errorf("cannot address field %d of %s", i, value.Type().Name())
+		for i := range numFields {
+			field := rowValue.Field(i)
+			if field.CanAddr() {
+				args[i] = field.Addr().Interface()
+			} else {
+				return nil, fmt.Errorf("cannot address field %d of %s", i, structType.Name())
+			}
 		}
+
+		if err := rows.Scan(args...); err != nil {
+			return nil, fmt.Errorf("failed to scan %s: %w", structType.Name(), err)
+		}
+
+		result = append(result, rowValue.Interface().(T))
 	}
 
-	// Scan the row into the struct fields
-	if err := rows.Scan(args...); err != nil {
-		return fmt.Errorf("failed to scan %s: %w", value.Type().Name(), err)
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	return nil
+	return result, nil
 }

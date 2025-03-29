@@ -35,7 +35,7 @@ func ProtectRoute() gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			userID := claims["user_id"].(float64) // Extract user ID from token claims
+			userID := claims["userID"].(float64)  // Extract user ID from token claims
 			c.Set("userID", int(userID))          // Store in Gin context
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - Invalid Token"})

@@ -47,7 +47,7 @@ const VerificationForm = ({ signUp }: { signUp?: boolean }) => {
 
   async function handleSignUp() {
     await http({
-      url: "/sign-up",
+      url: "/auth/sign-up",
       method: "POST",
       body: formData,
       handleData: ({ token, user }: { token: string; user: UserType }) => {
@@ -64,7 +64,7 @@ const VerificationForm = ({ signUp }: { signUp?: boolean }) => {
 
   async function handleVerification(data: z.infer<typeof VerificationSchema>) {
     const verified = await http({
-      url: `/attempt-verification?code=${data.code}`,
+      url: `/auth/attempt-verification?code=${data.code}`,
       method: "POST",
       body: formData,
       handleData: ({ token, user }: { token: string; user: UserType }) => {
@@ -79,7 +79,7 @@ const VerificationForm = ({ signUp }: { signUp?: boolean }) => {
     if (!verified) return; 
 
     if (signUp) handleSignUp();
-    else navigate("/reset-password");
+    else navigate("/auth/reset-password");
   }
 
   async function handleResend() {
@@ -87,7 +87,7 @@ const VerificationForm = ({ signUp }: { signUp?: boolean }) => {
     setTime(30);
 
     await http({
-      url: "/prepare-verification",
+      url: "/auth/prepare-verification",
       method: "POST",
       body: formData,
       handleSuccess: () => {

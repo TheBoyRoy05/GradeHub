@@ -2,8 +2,8 @@ package models
 
 type UserStore interface {
 	CreateUser(signUp *SignUp) error
-	GetUserByEmail(username string) (*User, error)
-	SignInUser(signIn *SignIn) (*User, error)
+	GetUserByEmail(username string) (User, error)
+	SignInUser(signIn *SignIn) (User, error)
 
 	PrepareVerification(verification *Verification) error
 	AttemptVerification(verification *Verification) error

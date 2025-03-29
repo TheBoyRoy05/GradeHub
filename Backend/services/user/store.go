@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) CreateUser(signUp *models.SignUp) error {
-	hashedPassword, err := utils.Hash(signUp.Password);
+	hashedPassword, err := utils.Hash(signUp.Password)
 	if err != nil {
 		return err
 	}
@@ -28,28 +28,32 @@ func (s *Store) CreateUser(signUp *models.SignUp) error {
 	return err
 }
 
-func (s *Store) GetUserByEmail(email string) (*models.User, error) {
+func (s *Store) GetUserByEmail(email string) (models.User, error) {
 	rows, err := s.db.Query("SELECT * FROM users WHERE email = $1 LIMIT 1", email)
 	if err != nil {
-		return nil, err
+		return models.User{}, err
 	}
 
-	var user models.User
-	if err := utils.ParseRows(rows, &user); err != nil {
-		return nil, err
+	users, err := utils.ParseRows[models.User](rows)
+	if err != nil {
+		return models.User{}, fmt.Errorf("failed to parse users: %w", err)
 	}
 
-	return &user, nil
+	if len(users) == 0 {
+		return models.User{}, fmt.Errorf("user not found")
+	}
+
+	return users[0], nil
 }
 
-func (s *Store) SignInUser(login *models.SignIn) (*models.User, error) {
+func (s *Store) SignInUser(login *models.SignIn) (models.User, error) {
 	user, err := s.GetUserByEmail(login.Email)
 	if err != nil {
-		return nil, err
+		return models.User{}, err
 	}
 
 	if utils.CheckHash(login.Password, user.Password) != nil {
-		return nil, fmt.Errorf("invalid credentials")
+		return models.User{}, fmt.Errorf("invalid credentials")
 	}
 
 	return user, nil
@@ -69,12 +73,12 @@ func (s *Store) AttemptVerification(verification *models.Verification) error {
 		return fmt.Errorf("failed to query verifications: %w", err)
 	}
 
-	var storedVerification models.Verification
-	if err := utils.ParseRows(rows, &storedVerification); err != nil {
+	verifications, err := utils.ParseRows[models.Verification](rows)
+	if err != nil {
 		return fmt.Errorf("failed to parse verifications: %w", err)
 	}
 
-	if utils.CheckHash(verification.Code, storedVerification.Code) != nil {
+	if len(verifications) == 0 || utils.CheckHash(verification.Code, verifications[0].Code) != nil {
 		return fmt.Errorf("invalid code")
 	}
 
@@ -82,7 +86,7 @@ func (s *Store) AttemptVerification(verification *models.Verification) error {
 }
 
 func (s *Store) ResetPassword(signIn *models.SignIn) error {
-	hashedPassword, err := utils.Hash(signIn.Password);
+	hashedPassword, err := utils.Hash(signIn.Password)
 	if err != nil {
 		return err
 	}

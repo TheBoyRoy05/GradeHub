@@ -43,7 +43,7 @@ const SignUpForm = () => {
 
   async function handleSubmit() {
     await http({
-      url: "/prepare-verification?signUp=true",
+      url: "/auth/prepare-verification?signUp=true",
       method: "POST",
       body: formData,
       handleSuccess: () => {
@@ -58,7 +58,7 @@ const SignUpForm = () => {
     const googleUser: GoogleUser = jwtDecode(tokenResponse.credential!);
 
     await http({
-      url: "/sign-up",
+      url: "/auth/sign-up",
       method: "POST",
       body: {
         firstName: googleUser.given_name,
@@ -200,7 +200,7 @@ function SignUp() {
       footer={
         <p>
           Already have an account?{" "}
-          <Link to="/sign-in" className="underline text-blue-500">
+          <Link to="/auth/sign-in" className="underline text-blue-500">
             Sign In
           </Link>
         </p>

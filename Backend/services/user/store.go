@@ -18,7 +18,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) CreateUser(signUp *models.SignUp) error {
-	hashedPassword, err := utils.Hash(signUp.Password)
+	hashedPassword, err := utils.Encrypt(signUp.Password)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,12 @@ func (s *Store) SignInUser(login *models.SignIn) (models.User, error) {
 		return models.User{}, err
 	}
 
-	if utils.CheckHash(login.Password, user.Password) != nil {
+	password, err := utils.Decrypt(user.Password);
+	if err != nil {
+		return models.User{}, err
+	}
+
+	if password != login.Password {
 		return models.User{}, fmt.Errorf("invalid credentials")
 	}
 
@@ -86,7 +91,7 @@ func (s *Store) AttemptVerification(verification *models.Verification) error {
 }
 
 func (s *Store) ResetPassword(signIn *models.SignIn) error {
-	hashedPassword, err := utils.Hash(signIn.Password)
+	hashedPassword, err := utils.Encrypt(signIn.Password)
 	if err != nil {
 		return err
 	}
